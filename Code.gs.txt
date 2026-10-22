@@ -1,0 +1,89 @@
+/**
+ * TAMBAHAN FITUR TKA: Ambil Soal dengan Opsi Acak (Shuffle)
+ * Siswa berdampingan tidak akan mendapatkan urutan nomor soal yang sama.
+ */
+function getSoalMapelSiswa(mapel) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('SOAL');
+  if (!sheet) return [];
+  
+  const data = sheet.getDataRange().getValues();
+  const list = [];
+
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][1]).trim() === String(mapel).trim()) {
+      list.push({
+        id: String(data[i][0]),
+        nomor: data[i][2],
+        pertanyaan: data[i][3],
+        a: data[i][4],
+        b: data[i][5],
+        c: data[i][6],
+        d: data[i][7]
+      });
+    }
+  }
+
+  // Algoritma Fisher-Yates untuk Mengacak Soal secara Adil
+  for (let i = list.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [list[i], list[j]] = [list[j], list[i]];
+  }
+
+  return list;
+}
+
+/**
+ * PENGIRIMAN JAWABAN DENGAN LOCK SERVICE (ANTI-TABRAKAN / CONCURRENCY SAFE)
+ * Mencegah Google Sheets error 'Spreadsheet locked' saat 30+ siswa submit bersamaan.
+ */
+function submitExam(username, nama, kelas, mapel, answers) {
+  const lock = LockService.getScriptLock();
+  try {
+    // Tunggu giliran penyimpanan hingga 20 detik jika ada siswa lain yang sedang submit
+    lock.waitLock(20000);
+
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheetSoal = ss.getSheetByName('SOAL');
+    const dataSoal = sheetSoal.getDataRange().getValues();
+
+    let totalSoal = 0;
+    let benar = 0;
+
+    for (let i = 1; i < dataSoal.length; i++) {
+      if (String(dataSoal[i][1]).trim() === String(mapel).trim()) {
+        totalSoal++;
+        const qId = String(dataSoal[i][0]);
+        const kunci = String(dataSoal[i][8]).trim().toUpperCase();
+        if (answers[qId] && String(answers[qId]).trim().toUpperCase() === kunci) {
+          benar++;
+        }
+      }
+    }
+
+    if (totalSoal === 0) totalSoal = 30;
+    const score = Math.round((benar / totalSoal) * 100);
+
+    // Ambil data jumlah pelanggaran terakhir siswa
+    const sheetSiswa = ss.getSheetByName('SISWA');
+    const dataSiswa = sheetSiswa.getDataRange().getValues();
+    let vCount = 0;
+    for (let i = 1; i < dataSiswa.length; i++) {
+      if (String(dataSiswa[i][0]).trim() === String(username).trim()) {
+        vCount = Number(dataSiswa[i][5]) || 0;
+        break;
+      }
+    }
+
+    // Tulis ke sheet HASIL_UJIAN
+    const sheetHasil = ss.getSheetByName('HASIL_UJIAN');
+    sheetHasil.appendRow([new Date(), username, nama, kelas, mapel, score, benar, totalSoal, vCount, 'SELESAI']);
+
+    return { success: true, score: score, benar: benar, total: totalSoal };
+
+  } catch (e) {
+    return { success: false, message: 'Server sibuk, mencoba ulang otomatis: ' + e.message };
+  } finally {
+    lock.releaseLock();
+  }
+}
