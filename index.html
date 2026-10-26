@@ -363,21 +363,36 @@
     // =========================================================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwf027kLZBfIdXv6GqfZ7Vu9pTEFA-XuNniiv5hW1Bj2vItW0Ii6Ous5S5RDBnyl4WY/exec";
 
-    // Jembatan Fetch API Pengganti google.script.run
+    // Jembatan Fetch API yang Kebal CORS untuk Netlify
     async function callApi(action, payload = {}) {
       try {
+        const bodyData = JSON.stringify({
+          action: action,
+          ...payload
+        });
+
+        // PENTING: Gunakan text/plain agar browser TIDAK mengirim CORS Preflight (OPTIONS request)
         const response = await fetch(API_URL, {
           method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: action, ...payload })
+          mode: "cors",
+          redirect: "follow",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: bodyData
         });
-        return await response.json();
+
+        if (!response.ok) {
+          throw new Error("HTTP Status " + response.status);
+        }
+
+        const data = await response.json();
+        return data;
       } catch (err) {
         console.error("API Call Error:", err);
         return { success: false, message: "Koneksi ke server gagal: " + err.message };
       }
     }
-
     let currentUser = null;
     let selectedMapel = null;
     let examData = [];
