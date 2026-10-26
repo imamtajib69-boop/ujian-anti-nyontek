@@ -361,22 +361,20 @@
     // URL Web App Google Apps Script Anda yang sudah aktif:
     const API_URL = "https://script.google.com/macros/s/AKfycbwf027kLZBfIdXv6GqfZ7Vu9pTEFA-XuNniiv5hW1Bj2vItW0Ii6Ous5S5RDBnyl4WY/exec";
 
-    // Jembatan Fetch API yang kebal blokir CORS Netlify
+    // Jembatan GET API - Bebas Blokir CORS Netlify 100%
     async function callApi(action, payload = {}) {
       try {
-        const bodyData = JSON.stringify({
+        const payloadString = encodeURIComponent(JSON.stringify({
           action: action,
           ...payload
-        });
+        }));
 
-        const response = await fetch(API_URL, {
-          method: "POST",
+        const url = `${API_URL}?action=${encodeURIComponent(action)}&data=${payloadString}`;
+
+        const response = await fetch(url, {
+          method: "GET",
           mode: "cors",
-          redirect: "follow",
-          headers: {
-            "Content-Type": "text/plain;charset=utf-8"
-          },
-          body: bodyData
+          redirect: "follow"
         });
 
         if (!response.ok) {
@@ -390,7 +388,6 @@
         return { success: false, message: "Koneksi ke server gagal: " + err.message };
       }
     }
-
     let currentUser = null;
     let selectedMapel = null;
     let examData = [];
