@@ -358,12 +358,10 @@
 
   <!-- SCRIPT API BRIDGE -->
   <script>
-    // =========================================================================
-    // TEMPELKAN URL DARI GOOGLE APPS SCRIPT ANDA DI SINI:
-    // =========================================================================
+    // URL Web App Google Apps Script Anda yang sudah aktif:
     const API_URL = "https://script.google.com/macros/s/AKfycbwf027kLZBfIdXv6GqfZ7Vu9pTEFA-XuNniiv5hW1Bj2vItW0Ii6Ous5S5RDBnyl4WY/exec";
 
-    // Jembatan Fetch API yang Kebal CORS untuk Netlify
+    // Jembatan Fetch API yang kebal blokir CORS Netlify
     async function callApi(action, payload = {}) {
       try {
         const bodyData = JSON.stringify({
@@ -371,7 +369,6 @@
           ...payload
         });
 
-        // PENTING: Gunakan text/plain agar browser TIDAK mengirim CORS Preflight (OPTIONS request)
         const response = await fetch(API_URL, {
           method: "POST",
           mode: "cors",
@@ -393,6 +390,7 @@
         return { success: false, message: "Koneksi ke server gagal: " + err.message };
       }
     }
+
     let currentUser = null;
     let selectedMapel = null;
     let examData = [];
