@@ -1,12 +1,157 @@
 /**
- * TAMBAHAN FITUR TKA: Ambil Soal dengan Opsi Acak (Shuffle)
- * Siswa berdampingan tidak akan mendapatkan urutan nomor soal yang sama.
+ * PORTAL UJIAN CBT TKA - TEKNIK OTOMOTIF
+ * Backend Google Apps Script (Web App Langsung)
  */
+
+const MAPEL_LIST = [
+  "Tune-up EFI",
+  "Overhaul Mesin",
+  "Sistem Chasis",
+  "Sistem Pemindah Tenaga",
+  "Kelistrikan Body dan AC",
+  "Sistem Kelistrikan Engine"
+];
+
+const KELAS_LIST = [
+  "XI TO 1", "XI TO 2", "XI TO 3", "XI TO 4", "XI TO 5", "XI TO 6", "XI TO 7"
+];
+
+// FUNGSI INI YANG MENAMPILKAN HALAMAN WEB PORTAL UJIAN
+function doGet() {
+  initSpreadsheet();
+  return HtmlService.createTemplateFromFile('index')
+    .evaluate()
+    .setTitle('CBT TKA - Teknik Otomotif')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+function initSpreadsheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  let sheetUsers = ss.getSheetByName('PENGGUNA');
+  if (!sheetUsers) {
+    sheetUsers = ss.insertSheet('PENGGUNA');
+    sheetUsers.appendRow(['username', 'password', 'nama', 'role', 'kelas_ampu']);
+    sheetUsers.appendRow(['admin', 'admin123', 'Administrator Utama', 'ADMIN', 'SEMUA']);
+    for (let i = 1; i <= 7; i++) {
+      sheetUsers.appendRow([`guru_to${i}`, `guru123`, `Guru Pengampu XI TO ${i}`, 'GURU', `XI TO ${i}`]);
+    }
+  }
+
+  let sheetSiswa = ss.getSheetByName('SISWA');
+  if (!sheetSiswa) {
+    sheetSiswa = ss.insertSheet('SISWA');
+    sheetSiswa.appendRow(['username', 'password', 'nama', 'kelas', 'status', 'pelanggaran_count']);
+  }
+
+  let sheetSoal = ss.getSheetByName('SOAL');
+  if (!sheetSoal) {
+    sheetSoal = ss.insertSheet('SOAL');
+    sheetSoal.appendRow(['id', 'mapel', 'nomor', 'pertanyaan', 'opsi_a', 'opsi_b', 'opsi_c', 'opsi_d', 'kunci']);
+  }
+
+  let sheetHasil = ss.getSheetByName('HASIL_UJIAN');
+  if (!sheetHasil) {
+    sheetHasil = ss.insertSheet('HASIL_UJIAN');
+    sheetHasil.appendRow(['timestamp', 'username', 'nama', 'kelas', 'mapel', 'nilai', 'benar', 'total_soal', 'pelanggaran', 'status']);
+  }
+
+  let sheetLog = ss.getSheetByName('LOG_KECURANGAN');
+  if (!sheetLog) {
+    sheetLog = ss.insertSheet('LOG_KECURANGAN');
+    sheetLog.appendRow(['timestamp', 'username', 'nama', 'kelas', 'mapel', 'alasan', 'pelanggaran_ke']);
+  }
+}
+
+function loginUser(username, password) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const u = String(username).trim();
+  const p = String(password).trim();
+
+  const sheetUsers = ss.getSheetByName('PENGGUNA');
+  const dataUsers = sheetUsers.getDataRange().getValues();
+  for (let i = 1; i < dataUsers.length; i++) {
+    if (String(dataUsers[i][0]).trim() === u && String(dataUsers[i][1]).trim() === p) {
+      return {
+        success: true,
+        role: dataUsers[i][3],
+        nama: dataUsers[i][2],
+        username: u,
+        kelasAmpu: dataUsers[i][4],
+        mapelList: MAPEL_LIST,
+        kelasList: KELAS_LIST
+      };
+    }
+  }
+
+  const sheetSiswa = ss.getSheetByName('SISWA');
+  const dataSiswa = sheetSiswa.getDataRange().getValues();
+  for (let i = 1; i < dataSiswa.length; i++) {
+    if (String(dataSiswa[i][0]).trim() === u && String(dataSiswa[i][1]).trim() === p) {
+      if (dataSiswa[i][4] === 'BLOCKED') {
+        return { success: false, message: 'Akun Anda DIBLOKIR permanen karena terdeteksi 2x curang.' };
+      }
+      return {
+        success: true,
+        role: 'SISWA',
+        nama: dataSiswa[i][2],
+        username: u,
+        kelas: dataSiswa[i][3],
+        violations: Number(dataSiswa[i][5]) || 0,
+        mapelList: MAPEL_LIST
+      };
+    }
+  }
+  return { success: false, message: 'Username atau Password salah!' };
+}
+
+function verifySession(username, role) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const u = String(username).trim();
+
+  if (role === 'ADMIN' || role === 'GURU') {
+    const sheetUsers = ss.getSheetByName('PENGGUNA');
+    const dataUsers = sheetUsers.getDataRange().getValues();
+    for (let i = 1; i < dataUsers.length; i++) {
+      if (String(dataUsers[i][0]).trim() === u) {
+        return {
+          success: true,
+          role: dataUsers[i][3],
+          nama: dataUsers[i][2],
+          username: u,
+          kelasAmpu: dataUsers[i][4],
+          mapelList: MAPEL_LIST,
+          kelasList: KELAS_LIST
+        };
+      }
+    }
+  } else if (role === 'SISWA') {
+    const sheetSiswa = ss.getSheetByName('SISWA');
+    const dataSiswa = sheetSiswa.getDataRange().getValues();
+    for (let i = 1; i < dataSiswa.length; i++) {
+      if (String(dataSiswa[i][0]).trim() === u) {
+        if (dataSiswa[i][4] === 'BLOCKED') return { success: false, message: 'Akun diblokir.' };
+        return {
+          success: true,
+          role: 'SISWA',
+          nama: dataSiswa[i][2],
+          username: u,
+          kelas: dataSiswa[i][3],
+          violations: Number(dataSiswa[i][5]) || 0,
+          mapelList: MAPEL_LIST
+        };
+      }
+    }
+  }
+  return { success: false, message: 'Sesi kedaluwarsa.' };
+}
+
 function getSoalMapelSiswa(mapel) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('SOAL');
   if (!sheet) return [];
-  
+
   const data = sheet.getDataRange().getValues();
   const list = [];
 
@@ -24,7 +169,7 @@ function getSoalMapelSiswa(mapel) {
     }
   }
 
-  // Algoritma Fisher-Yates untuk Mengacak Soal secara Adil
+  // Acak soal (Fisher-Yates)
   for (let i = list.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [list[i], list[j]] = [list[j], list[i]];
@@ -33,16 +178,10 @@ function getSoalMapelSiswa(mapel) {
   return list;
 }
 
-/**
- * PENGIRIMAN JAWABAN DENGAN LOCK SERVICE (ANTI-TABRAKAN / CONCURRENCY SAFE)
- * Mencegah Google Sheets error 'Spreadsheet locked' saat 30+ siswa submit bersamaan.
- */
 function submitExam(username, nama, kelas, mapel, answers) {
   const lock = LockService.getScriptLock();
   try {
-    // Tunggu giliran penyimpanan hingga 20 detik jika ada siswa lain yang sedang submit
-    lock.waitLock(20000);
-
+    lock.waitLock(25000);
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheetSoal = ss.getSheetByName('SOAL');
     const dataSoal = sheetSoal.getDataRange().getValues();
@@ -64,7 +203,6 @@ function submitExam(username, nama, kelas, mapel, answers) {
     if (totalSoal === 0) totalSoal = 30;
     const score = Math.round((benar / totalSoal) * 100);
 
-    // Ambil data jumlah pelanggaran terakhir siswa
     const sheetSiswa = ss.getSheetByName('SISWA');
     const dataSiswa = sheetSiswa.getDataRange().getValues();
     let vCount = 0;
@@ -75,15 +213,256 @@ function submitExam(username, nama, kelas, mapel, answers) {
       }
     }
 
-    // Tulis ke sheet HASIL_UJIAN
     const sheetHasil = ss.getSheetByName('HASIL_UJIAN');
     sheetHasil.appendRow([new Date(), username, nama, kelas, mapel, score, benar, totalSoal, vCount, 'SELESAI']);
 
     return { success: true, score: score, benar: benar, total: totalSoal };
-
-  } catch (e) {
-    return { success: false, message: 'Server sibuk, mencoba ulang otomatis: ' + e.message };
+  } catch (err) {
+    return { success: false, message: err.toString() };
   } finally {
     lock.releaseLock();
   }
+}
+
+function recordViolation(username, nama, kelas, mapel, reason) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetSiswa = ss.getSheetByName('SISWA');
+  const sheetLog = ss.getSheetByName('LOG_KECURANGAN');
+  const dataSiswa = sheetSiswa.getDataRange().getValues();
+
+  let currentViolations = 0;
+  let rowIndex = -1;
+
+  for (let i = 1; i < dataSiswa.length; i++) {
+    if (String(dataSiswa[i][0]).trim() === String(username).trim()) {
+      currentViolations = Number(dataSiswa[i][5]) || 0;
+      rowIndex = i + 1;
+      break;
+    }
+  }
+
+  if (rowIndex === -1) return { success: false, action: 'NONE' };
+
+  currentViolations++;
+  sheetSiswa.getRange(rowIndex, 6).setValue(currentViolations);
+  sheetLog.appendRow([new Date(), username, nama, kelas, mapel || '-', reason, currentViolations]);
+
+  if (currentViolations === 1) {
+    return {
+      action: 'LOGOUT',
+      message: 'PERINGATAN 1! Terdeteksi meninggalkan jendela ujian. Anda otomatis di-logout!'
+    };
+  } else if (currentViolations >= 2) {
+    sheetSiswa.getRange(rowIndex, 5).setValue('BLOCKED');
+    const sheetHasil = ss.getSheetByName('HASIL_UJIAN');
+    sheetHasil.appendRow([new Date(), username, nama, kelas, mapel || '-', 0, 0, 30, currentViolations, 'DISKUALIFIKASI (DIBLOKIR)']);
+
+    return {
+      action: 'BLOCKED',
+      message: 'PELANGGARAN KE-2! Akun Anda DIBLOKIR dan didiskualifikasi.'
+    };
+  }
+}
+
+function getTeacherDashboardData(role, kelasAmpu) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetSiswa = ss.getSheetByName('SISWA');
+  const dataSiswa = sheetSiswa.getDataRange().getValues();
+  const listSiswa = [];
+  for (let i = 1; i < dataSiswa.length; i++) {
+    const k = dataSiswa[i][3];
+    if (role === 'ADMIN' || k === kelasAmpu) {
+      listSiswa.push({
+        username: dataSiswa[i][0],
+        password: dataSiswa[i][1],
+        nama: dataSiswa[i][2],
+        kelas: dataSiswa[i][3],
+        status: dataSiswa[i][4],
+        violations: dataSiswa[i][5]
+      });
+    }
+  }
+
+  const sheetHasil = ss.getSheetByName('HASIL_UJIAN');
+  const dataHasil = sheetHasil.getDataRange().getValues();
+  const listHasil = [];
+  for (let i = 1; i < dataHasil.length; i++) {
+    const k = dataHasil[i][3];
+    if (role === 'ADMIN' || k === kelasAmpu) {
+      listHasil.push({
+        waktu: Utilities.formatDate(new Date(dataHasil[i][0]), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm"),
+        username: dataHasil[i][1],
+        nama: dataHasil[i][2],
+        kelas: dataHasil[i][3],
+        mapel: dataHasil[i][4],
+        nilai: dataHasil[i][5],
+        benar: dataHasil[i][6],
+        total: dataHasil[i][7],
+        pelanggaran: dataHasil[i][8],
+        status: dataHasil[i][9]
+      });
+    }
+  }
+
+  const sheetLog = ss.getSheetByName('LOG_KECURANGAN');
+  const dataLog = sheetLog.getDataRange().getValues();
+  const listLog = [];
+  for (let i = 1; i < dataLog.length; i++) {
+    const k = dataLog[i][3];
+    if (role === 'ADMIN' || k === kelasAmpu) {
+      listLog.push({
+        waktu: Utilities.formatDate(new Date(dataLog[i][0]), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss"),
+        username: dataLog[i][1],
+        nama: dataLog[i][2],
+        kelas: dataLog[i][3],
+        mapel: dataLog[i][4],
+        alasan: dataLog[i][5],
+        ke: dataLog[i][6]
+      });
+    }
+  }
+
+  return { siswa: listSiswa, hasil: listHasil, log: listLog };
+}
+
+function importSiswaPerKelas(kelas, namaListRaw) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('SISWA');
+  const lines = namaListRaw.split('\n');
+  const added = [];
+
+  const classCode = kelas.replace(/\s+/g, '').toLowerCase();
+  const existingData = sheet.getDataRange().getValues();
+  let count = 0;
+  for (let i = 1; i < existingData.length; i++) {
+    if (existingData[i][3] === kelas) count++;
+  }
+
+  lines.forEach(line => {
+    const nama = line.trim();
+    if (nama.length > 0) {
+      count++;
+      const paddedNo = String(count).padStart(2, '0');
+      const randomPin = Math.floor(1000 + Math.random() * 9000);
+      const username = `${classCode}_${paddedNo}`;
+      const password = `to${randomPin}`;
+
+      sheet.appendRow([username, password, nama, kelas, 'ACTIVE', 0]);
+      added.push({ username: username, password: password, nama: nama, kelas: kelas });
+    }
+  });
+
+  return { success: true, count: added.length, data: added };
+}
+
+function importSoalMasal(mapel, rawText) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('SOAL');
+  const lines = rawText.split('\n');
+  const parsedQuestions = [];
+  let currentQ = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+
+    if (line.includes('|')) {
+      const parts = line.split('|').map(p => p.trim());
+      if (parts.length >= 7) {
+        parsedQuestions.push({
+          nomor: parts[0], pertanyaan: parts[1],
+          a: parts[2], b: parts[3], c: parts[4], d: parts[5],
+          kunci: parts[6].toUpperCase()
+        });
+        continue;
+      }
+    }
+
+    const matchNo = line.match(/^(?:Soal\s*)?(\d+)[\.\)\:\-]\s*(.+)/i);
+    if (matchNo) {
+      if (currentQ && currentQ.pertanyaan && currentQ.a && currentQ.b && currentQ.c && currentQ.d && currentQ.kunci) {
+        parsedQuestions.push(currentQ);
+      }
+      currentQ = { nomor: matchNo[1], pertanyaan: matchNo[2], a: '', b: '', c: '', d: '', kunci: 'A' };
+      continue;
+    }
+
+    const matchA = line.match(/^[aA][\.\)\:\-]\s*(.+)/);
+    const matchB = line.match(/^[bB][\.\)\:\-]\s*(.+)/);
+    const matchC = line.match(/^[cC][\.\)\:\-]\s*(.+)/);
+    const matchD = line.match(/^[dD][\.\)\:\-]\s*(.+)/);
+    const matchKunci = line.match(/^(?:Kunci|Kunci Jawaban|Jawaban|Ans)[\.\:\-\s]*([a-dA-D])/i);
+
+    if (currentQ) {
+      if (matchA) currentQ.a = matchA[1];
+      else if (matchB) currentQ.b = matchB[1];
+      else if (matchC) currentQ.c = matchC[1];
+      else if (matchD) currentQ.d = matchD[1];
+      else if (matchKunci) currentQ.kunci = matchKunci[1].toUpperCase();
+      else if (!currentQ.a) currentQ.pertanyaan += ' ' + line;
+    }
+  }
+
+  if (currentQ && currentQ.pertanyaan && currentQ.a && currentQ.b && currentQ.c && currentQ.d && currentQ.kunci) {
+    parsedQuestions.push(currentQ);
+  }
+
+  if (parsedQuestions.length === 0) {
+    return { success: false, message: 'Format teks soal tidak terbaca.' };
+  }
+
+  const dataSoal = sheet.getDataRange().getValues();
+  for (let r = dataSoal.length - 1; r >= 1; r--) {
+    if (String(dataSoal[r][1]).trim() === String(mapel).trim()) sheet.deleteRow(r + 1);
+  }
+
+  parsedQuestions.forEach(q => {
+    const id = `${mapel.replace(/\s+/g, '_')}_${q.nomor}`;
+    sheet.appendRow([id, mapel, q.nomor, q.pertanyaan, q.a, q.b, q.c, q.d, q.kunci]);
+  });
+
+  return { success: true, message: `Berhasil mengunggah ${parsedQuestions.length} butir soal.` };
+}
+
+function simpanSoalMapel(mapel, noSoal, pertanyaan, a, b, c, d, kunci) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('SOAL');
+  const id = `${mapel.replace(/\s+/g, '_')}_${noSoal}`;
+  sheet.appendRow([id, mapel, noSoal, pertanyaan, a, b, c, d, kunci.toUpperCase()]);
+  return { success: true, message: `Soal no ${noSoal} disimpan.` };
+}
+
+function resetStatusSiswa(username) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('SISWA');
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]).trim() === String(username).trim()) {
+      sheet.getRange(i + 1, 5).setValue('ACTIVE');
+      sheet.getRange(i + 1, 6).setValue(0);
+      return { success: true };
+    }
+  }
+  return { success: false, message: 'Siswa tidak ditemukan.' };
+}
+
+function hapusNilaiSiswa(deleteList) {
+  if (!deleteList || deleteList.length === 0) return { success: false, message: 'Tidak ada data dipilih.' };
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetHasil = ss.getSheetByName('HASIL_UJIAN');
+  const data = sheetHasil.getDataRange().getValues();
+  let countDeleted = 0;
+
+  for (let r = data.length - 1; r >= 1; r--) {
+    const rowWaktu = Utilities.formatDate(new Date(data[r][0]), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm");
+    const rowUser = String(data[r][1]).trim();
+    const rowMapel = String(data[r][4]).trim();
+
+    const isMatch = deleteList.some(item => item.username === rowUser && item.mapel === rowMapel && item.waktu === rowWaktu);
+    if (isMatch) {
+      sheetHasil.deleteRow(r + 1);
+      countDeleted++;
+    }
+  }
+  return { success: true, message: `Berhasil menghapus ${countDeleted} data nilai.` };
 }
