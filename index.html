@@ -4,22 +4,8 @@
   <meta charset="UTF-8">
   <title>CBT - Portal Ujian Kemampuan Akademik Kejuruan</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts: Inter -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;800&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            tka: { navy: '#0f172a', blue: '#1e40af', accent: '#2563eb', light: '#f8fafc', border: '#e2e8f0' }
-          },
-          fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] }
-        }
-      }
-    }
-  </script>
   <style>
     body { user-select: none; -webkit-user-select: none; }
     input, textarea { user-select: text !important; -webkit-user-select: text !important; }
@@ -31,13 +17,11 @@
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased font-sans min-h-screen flex flex-col justify-between">
 
-  <!-- TOP HEADER -->
+  <!-- HEADER -->
   <header class="bg-slate-900 text-white border-b-4 border-blue-600 shadow-md sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center font-black text-lg text-white shadow-inner">
-          ⚡
-        </div>
+        <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center font-black text-lg text-white shadow-inner">⚡</div>
         <div>
           <div class="flex items-center space-x-2">
             <span class="bg-blue-900 text-blue-200 text-[10px] font-extrabold px-1.5 py-0.5 rounded tracking-wider">CBT TKA</span>
@@ -58,10 +42,10 @@
     </div>
   </header>
 
-  <!-- MAIN CONTAINER -->
+  <!-- MAIN -->
   <main class="flex-grow max-w-7xl w-full mx-auto p-3 sm:p-5 flex flex-col justify-center">
 
-    <!-- 1. VIEW: LOGIN -->
+    <!-- 1. LOGIN -->
     <section id="viewLogin" class="max-w-md w-full mx-auto my-auto py-4">
       <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 sm:p-8">
         <div class="text-center mb-6">
@@ -96,7 +80,7 @@
       </div>
     </section>
 
-    <!-- 2. VIEW: PILIH MAPEL -->
+    <!-- 2. PILIH MAPEL -->
     <section id="viewSelectMapel" class="hidden max-w-lg w-full mx-auto my-auto py-6">
       <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 sm:p-8">
         <div class="text-center mb-6">
@@ -104,27 +88,19 @@
           <h2 class="text-xl font-black text-slate-800 mt-2">Daftar Subtes / Jobsheet</h2>
           <p class="text-xs text-slate-500 mt-1">Pilih mata uji yang akan dikerjakan hari ini</p>
         </div>
-
         <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl mb-4 text-xs text-amber-900 leading-relaxed">
           <strong>⚠️ Regulasi Waktu TKA:</strong> Setiap butir soal berdurasi <strong>30 detik</strong>. Jawaban otomatis tersimpan dan berpindah saat waktu habis.
         </div>
-
         <div class="space-y-2.5" id="mapelListSelection"></div>
       </div>
     </section>
 
-    <!-- 3. VIEW: LEMBAR UJIAN (30 DETIK / SOAL) -->
+    <!-- 3. LEMBAR UJIAN (30 DETIK / SOAL) -->
     <section id="viewSiswa" class="hidden w-full flex-col max-w-6xl mx-auto space-y-4">
-      
-      <!-- Top Status Bar Ujian -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center space-x-3">
           <span class="px-2.5 py-1 bg-slate-100 font-mono font-bold text-xs text-slate-700 rounded border border-slate-300" id="currentQuestionIndicator">SOAL 01 / 30</span>
           <span class="text-xs font-bold text-slate-800 uppercase tracking-wide" id="examMapelBadge">MAPEL</span>
-          <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded border border-slate-200">
-            <button onclick="changeFontSize(-1)" class="px-1.5 py-0.5 bg-white rounded text-[10px] font-bold border">A-</button>
-            <button onclick="changeFontSize(1)" class="px-1.5 py-0.5 bg-white rounded text-[10px] font-bold border">A+</button>
-          </div>
         </div>
         <div class="flex items-center space-x-3">
           <div class="flex items-center space-x-1.5 px-3 py-1 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-xs font-bold">
@@ -138,9 +114,7 @@
         </div>
       </div>
 
-      <!-- Grid 2 Kolom -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        <!-- Kiri: Soal -->
         <div class="lg:col-span-8 space-y-4">
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col justify-between min-h-[460px]">
             <div class="w-full bg-slate-200 h-2">
@@ -167,7 +141,6 @@
           </div>
         </div>
 
-        <!-- Kanan: Timer & Palette -->
         <div class="lg:col-span-4 space-y-4">
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 text-center">
             <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Sisa Waktu Soal Ini</span>
@@ -195,7 +168,7 @@
       </div>
     </section>
 
-    <!-- 4. VIEW: HASIL UJIAN -->
+    <!-- 4. HASIL UJIAN -->
     <section id="viewResult" class="hidden max-w-md w-full mx-auto my-auto py-8">
       <div class="bg-white rounded-3xl shadow-xl border border-slate-200 p-8 text-center">
         <div id="resultIconBox" class="w-20 h-20 mx-auto bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-4xl mb-4 border border-blue-200">
@@ -214,7 +187,7 @@
       </div>
     </section>
 
-    <!-- 5. VIEW: DASHBOARD GURU & ADMIN -->
+    <!-- 5. DASHBOARD GURU & ADMIN -->
     <section id="viewTeacher" class="hidden w-full flex-col space-y-5">
       <div class="flex flex-wrap items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 gap-3">
         <div>
@@ -242,7 +215,7 @@
         <button onclick="switchTeacherTab('inputSoal')" id="tabBtnInputSoal" class="px-4 py-2 font-medium text-xs sm:text-sm rounded-xl text-slate-600 hover:bg-slate-100 transition">Bank Soal</button>
       </div>
 
-      <!-- TAB 1: EVALUASI -->
+      <!-- TAB EVALUASI -->
       <div id="tTabEvaluasi" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
           <div class="flex items-center space-x-2">
@@ -276,7 +249,7 @@
         </div>
       </div>
 
-      <!-- TAB 2: LOG -->
+      <!-- TAB LOG -->
       <div id="tTabKecurangan" class="hidden bg-white rounded-2xl shadow-sm border border-rose-100 p-4">
         <div class="overflow-x-auto scrollbar-thin max-h-96">
           <table class="w-full text-left text-xs text-slate-600">
@@ -288,7 +261,7 @@
         </div>
       </div>
 
-      <!-- TAB 3: DATA SISWA -->
+      <!-- TAB DATA SISWA -->
       <div id="tTabSiswa" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
         <div class="overflow-x-auto scrollbar-thin">
           <table class="w-full text-left text-xs text-slate-600">
@@ -300,7 +273,7 @@
         </div>
       </div>
 
-      <!-- TAB 4: IMPORT SISWA -->
+      <!-- TAB IMPORT SISWA -->
       <div id="tTabInputSiswa" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-6 max-w-2xl">
         <h3 class="font-bold text-slate-800 text-base mb-2">Generate Akun Siswa per Kelas</h3>
         <select id="importSelectKelas" class="w-full p-2.5 rounded-xl border border-slate-200 text-sm font-semibold bg-white mb-3"></select>
@@ -313,7 +286,7 @@
         </div>
       </div>
 
-      <!-- TAB 5: BANK SOAL -->
+      <!-- TAB BANK SOAL -->
       <div id="tTabInputSoal" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-6 max-w-3xl">
         <div class="flex justify-between items-center mb-4">
           <h3 class="font-extrabold text-slate-800 text-base">Manajemen Bank Soal</h3>
@@ -356,38 +329,8 @@
     Computer-Based Testing (CBT) &copy; Standar Uji Kompetensi Kejuruan
   </footer>
 
-  <!-- SCRIPT API BRIDGE -->
+  <!-- SCRIPT FRONTEND DENGAN GOOGLE.SCRIPT.RUN (BEBAS CORS 100%) -->
   <script>
-    // URL Web App Google Apps Script Anda yang sudah aktif:
-    const API_URL = "https://script.google.com/macros/s/AKfycbwf027kLZBfIdXv6GqfZ7Vu9pTEFA-XuNniiv5hW1Bj2vItW0Ii6Ous5S5RDBnyl4WY/exec";
-
-    // Jembatan GET API - Bebas Blokir CORS Netlify 100%
-    async function callApi(action, payload = {}) {
-      try {
-        const payloadString = encodeURIComponent(JSON.stringify({
-          action: action,
-          ...payload
-        }));
-
-        const url = `${API_URL}?action=${encodeURIComponent(action)}&data=${payloadString}`;
-
-        const response = await fetch(url, {
-          method: "GET",
-          mode: "cors",
-          redirect: "follow"
-        });
-
-        if (!response.ok) {
-          throw new Error("HTTP Status " + response.status);
-        }
-
-        const data = await response.json();
-        return data;
-      } catch (err) {
-        console.error("API Call Error:", err);
-        return { success: false, message: "Koneksi ke server gagal: " + err.message };
-      }
-    }
     let currentUser = null;
     let selectedMapel = null;
     let examData = [];
@@ -406,19 +349,23 @@
       checkSavedSession();
     });
 
-    async function checkSavedSession() {
+    function checkSavedSession() {
       const saved = localStorage.getItem('EXAM_SESSION_OTO');
       if (saved) {
         try {
           const u = JSON.parse(saved);
-          const res = await callApi('verifySession', { username: u.username, role: u.role });
-          if (res.success) {
-            currentUser = res;
-            applyUserSession();
-          } else {
-            localStorage.removeItem('EXAM_SESSION_OTO');
-            showView('viewLogin');
-          }
+          google.script.run
+            .withSuccessHandler(res => {
+              if (res.success) {
+                currentUser = res;
+                applyUserSession();
+              } else {
+                localStorage.removeItem('EXAM_SESSION_OTO');
+                showView('viewLogin');
+              }
+            })
+            .withFailureHandler(() => showView('viewLogin'))
+            .verifySession(u.username, u.role);
         } catch (e) {
           localStorage.removeItem('EXAM_SESSION_OTO');
           showView('viewLogin');
@@ -428,7 +375,7 @@
       }
     }
 
-    async function submitLogin(e) {
+    function submitLogin(e) {
       e.preventDefault();
       const u = document.getElementById('loginUsername').value.trim();
       const p = document.getElementById('loginPassword').value.trim();
@@ -440,18 +387,26 @@
       btn.disabled = true;
       spn.classList.remove('hidden');
 
-      const res = await callApi('loginUser', { username: u, password: p });
-      btn.disabled = false;
-      spn.classList.add('hidden');
-
-      if (res.success) {
-        currentUser = res;
-        localStorage.setItem('EXAM_SESSION_OTO', JSON.stringify({ username: res.username, role: res.role }));
-        applyUserSession();
-      } else {
-        err.textContent = res.message;
-        err.classList.remove('hidden');
-      }
+      google.script.run
+        .withSuccessHandler(res => {
+          btn.disabled = false;
+          spn.classList.add('hidden');
+          if (res.success) {
+            currentUser = res;
+            localStorage.setItem('EXAM_SESSION_OTO', JSON.stringify({ username: res.username, role: res.role }));
+            applyUserSession();
+          } else {
+            err.textContent = res.message;
+            err.classList.remove('hidden');
+          }
+        })
+        .withFailureHandler(errRes => {
+          btn.disabled = false;
+          spn.classList.add('hidden');
+          err.textContent = 'Gagal terhubung: ' + errRes.message;
+          err.classList.remove('hidden');
+        })
+        .loginUser(u, p);
     }
 
     function applyUserSession() {
@@ -503,7 +458,7 @@
       });
     }
 
-    async function startStudentExam(mapel) {
+    function startStudentExam(mapel) {
       selectedMapel = mapel;
       examAnswers = {};
       currentQuestionIdx = 0;
@@ -515,18 +470,24 @@
       document.getElementById('tkaUserKelas').textContent = currentUser.kelas;
       document.getElementById('tkaUserCode').textContent = currentUser.username;
 
-      const res = await callApi('getSoalMapelSiswa', { mapel: mapel });
-      if (!res.success || !res.data || res.data.length === 0) {
-        alert('Belum ada soal pada mapel ini.');
-        showSelectMapel();
-        return;
-      }
-
-      examData = res.data;
-      buildPaletteGrid();
-      loadQuestionByIndex(0);
-      activateProctoring();
-      requestFullScreenMode();
+      google.script.run
+        .withSuccessHandler(list => {
+          if (!list || list.length === 0) {
+            alert('Belum ada soal pada mapel ini.');
+            showSelectMapel();
+            return;
+          }
+          examData = list;
+          buildPaletteGrid();
+          loadQuestionByIndex(0);
+          activateProctoring();
+          requestFullScreenMode();
+        })
+        .withFailureHandler(err => {
+          alert('Gagal mengambil soal: ' + err.message);
+          showSelectMapel();
+        })
+        .getSoalMapelSiswa(mapel);
     }
 
     function buildPaletteGrid() {
@@ -671,7 +632,7 @@
       }
     }
 
-    async function finishAndSubmitExam() {
+    function finishAndSubmitExam() {
       clearInterval(questionTimerInterval);
       deactivateProctoring();
       exitFullScreenSafe();
@@ -680,19 +641,18 @@
       document.getElementById('skorSiswaDisplay').textContent = '...';
       document.getElementById('skorDetailDisplay').textContent = 'Menghitung nilai di server...';
 
-      const res = await callApi('submitExam', {
-        username: currentUser.username,
-        nama: currentUser.nama,
-        kelas: currentUser.kelas,
-        mapel: selectedMapel,
-        answers: examAnswers
-      });
-
-      if (res.success) {
-        showFinalExamScore(res.score, res.benar, res.total);
-      } else {
-        alert('Gagal simpan jawaban: ' + res.message);
-      }
+      google.script.run
+        .withSuccessHandler(res => {
+          if (res.success) {
+            showFinalExamScore(res.score, res.benar, res.total);
+          } else {
+            alert('Gagal simpan: ' + res.message);
+          }
+        })
+        .withFailureHandler(err => {
+          alert('Koneksi gagal: ' + err.message);
+        })
+        .submitExam(currentUser.username, currentUser.nama, currentUser.kelas, selectedMapel, examAnswers);
     }
 
     function showFinalExamScore(score, benar, total, isBlocked = false) {
@@ -751,29 +711,25 @@
       }
     }
 
-    async function triggerCheatViolation(reason) {
+    function triggerCheatViolation(reason) {
       if (violationCooldown) return;
       violationCooldown = true;
       setTimeout(() => { violationCooldown = false; }, 3000);
 
-      const res = await callApi('recordViolation', {
-        username: currentUser.username,
-        nama: currentUser.nama,
-        kelas: currentUser.kelas,
-        mapel: selectedMapel,
-        reason: reason
-      });
-
-      if (res.action === 'LOGOUT') {
-        alert(res.message);
-        handleLogout();
-      } else if (res.action === 'BLOCKED') {
-        clearInterval(questionTimerInterval);
-        alert(res.message);
-        deactivateProctoring();
-        localStorage.removeItem('EXAM_SESSION_OTO');
-        showFinalExamScore(0, 0, 30, true);
-      }
+      google.script.run
+        .withSuccessHandler(res => {
+          if (res.action === 'LOGOUT') {
+            alert(res.message);
+            handleLogout();
+          } else if (res.action === 'BLOCKED') {
+            clearInterval(questionTimerInterval);
+            alert(res.message);
+            deactivateProctoring();
+            localStorage.removeItem('EXAM_SESSION_OTO');
+            showFinalExamScore(0, 0, 30, true);
+          }
+        })
+        .recordViolation(currentUser.username, currentUser.nama, currentUser.kelas, selectedMapel, reason);
     }
 
     function setupSecurityTraps() {
@@ -842,14 +798,15 @@
       }
     }
 
-    async function loadTeacherDashboard() {
-      const res = await callApi('getTeacherDashboardData', { role: currentUser.role, kelasAmpu: currentUser.kelasAmpu });
-      if (res.success) {
-        cachedEvaluasiData = res.data.hasil;
-        applyEvaluasiFilter();
-        renderLogTable(res.data.log);
-        renderSiswaTable(res.data.siswa);
-      }
+    function loadTeacherDashboard() {
+      google.script.run
+        .withSuccessHandler(data => {
+          cachedEvaluasiData = data.hasil;
+          applyEvaluasiFilter();
+          renderLogTable(data.log);
+          renderSiswaTable(data.siswa);
+        })
+        .getTeacherDashboardData(currentUser.role, currentUser.kelasAmpu);
     }
 
     function applyEvaluasiFilter() {
@@ -898,22 +855,28 @@
       document.getElementById('btnHapusTerpilih').disabled = count === 0;
     }
 
-    async function hapusSiswaTerpilih() {
+    function hapusSiswaTerpilih() {
       const selected = document.querySelectorAll('.eval-item-checkbox:checked');
       if (selected.length === 0 || !confirm(`Hapus ${selected.length} data terpilih?`)) return;
 
       const deleteList = [];
       selected.forEach(cb => deleteList.push({ username: cb.dataset.username, mapel: cb.dataset.mapel, waktu: cb.dataset.waktu }));
-      const res = await callApi('hapusNilaiSiswa', { deleteList });
-      alert(res.message);
-      loadTeacherDashboard();
+      google.script.run
+        .withSuccessHandler(res => {
+          alert(res.message);
+          loadTeacherDashboard();
+        })
+        .hapusNilaiSiswa(deleteList);
     }
 
-    async function hapusSatuNilai(username, mapel, waktu, nama) {
+    function hapusSatuNilai(username, mapel, waktu, nama) {
       if (!confirm(`Hapus nilai ${nama}?`)) return;
-      const res = await callApi('hapusNilaiSiswa', { deleteList: [{ username, mapel, waktu }] });
-      alert(res.message);
-      loadTeacherDashboard();
+      google.script.run
+        .withSuccessHandler(res => {
+          alert(res.message);
+          loadTeacherDashboard();
+        })
+        .hapusNilaiSiswa([{ username, mapel, waktu }]);
     }
 
     function renderLogTable(list) {
@@ -960,23 +923,27 @@
       });
     }
 
-    async function unblockStudent(username) {
+    function unblockStudent(username) {
       if (confirm(`Buka blokir akun ${username}?`)) {
-        await callApi('resetStatusSiswa', { username });
-        loadTeacherDashboard();
+        google.script.run
+          .withSuccessHandler(() => loadTeacherDashboard())
+          .resetStatusSiswa(username);
       }
     }
 
-    async function handleBatchImportKelas() {
+    function handleBatchImportKelas() {
       const k = document.getElementById('importSelectKelas').value;
       const raw = document.getElementById('importNamaRaw').value.trim();
       if (!raw) return alert('Silakan masukkan nama siswa.');
-      const res = await callApi('importSiswaPerKelas', { kelas: k, namaListRaw: raw });
-      if (res.success) {
-        document.getElementById('importNamaRaw').value = '';
-        document.getElementById('boxHasilImport').classList.remove('hidden');
-        document.getElementById('listHasilImport').innerHTML = res.data.map(i => `<div><b>${i.nama}</b>: ${i.username} | ${i.password}</div>`).join('');
-      }
+      google.script.run
+        .withSuccessHandler(res => {
+          if (res.success) {
+            document.getElementById('importNamaRaw').value = '';
+            document.getElementById('boxHasilImport').classList.remove('hidden');
+            document.getElementById('listHasilImport').innerHTML = res.data.map(i => `<div><b>${i.nama}</b>: ${i.username} | ${i.password}</div>`).join('');
+          }
+        })
+        .importSiswaPerKelas(k, raw);
     }
 
     function toggleModeSoal(mode) {
@@ -989,16 +956,19 @@
       }
     }
 
-    async function handleUploadSoalMasal() {
+    function handleUploadSoalMasal() {
       const mapel = document.getElementById('soalMapelGlobal').value;
       const raw = document.getElementById('rawTeksSoalMasal').value.trim();
       if (!raw) return alert('Tempel teks soal dulu.');
-      const res = await callApi('importSoalMasal', { mapel, rawText: raw });
-      alert(res.message);
-      if (res.success) document.getElementById('rawTeksSoalMasal').value = '';
+      google.script.run
+        .withSuccessHandler(res => {
+          alert(res.message);
+          if (res.success) document.getElementById('rawTeksSoalMasal').value = '';
+        })
+        .importSoalMasal(mapel, raw);
     }
 
-    async function handleSimpanSoalMapel(e) {
+    function handleSimpanSoalMapel(e) {
       e.preventDefault();
       const mapel = document.getElementById('soalMapelGlobal').value;
       const nomor = document.getElementById('soalNomor').value;
@@ -1009,8 +979,9 @@
       const d = document.getElementById('soalOpsiD').value.trim();
       const kunci = document.getElementById('soalOpsiKunci').value;
 
-      const res = await callApi('simpanSoalMapel', { mapel, nomor, pertanyaan, a, b, c, d, kunci });
-      alert(res.message);
+      google.script.run
+        .withSuccessHandler(res => alert(res.message))
+        .simpanSoalMapel(mapel, nomor, pertanyaan, a, b, c, d, kunci);
     }
 
     function downloadEvaluasiExcel() {
